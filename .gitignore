@@ -1,1 +1,4 @@
 .env
+dist
+build
+OhMyProfiles.egg-info
