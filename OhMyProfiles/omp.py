@@ -5,8 +5,9 @@ import sys
 import json
 import uuid
 import zipfile
+import getpass
 
-VERSION = "0.10"
+VERSION = "0.15"
 
 
 def show_help():
@@ -31,7 +32,7 @@ def show_help():
 
 
 def importf(filename):
-    i = input("Password:")
+    i = getpass.getpass('Password:')
     h = hashlib.sha512()
     h.update(i.encode())
     Hash = h.hexdigest().encode()
@@ -60,8 +61,8 @@ def importf(filename):
 
 
 def export_config():
-    i = input("Password:")
-    re_i = input("Retype password:")
+    i = getpass.getpass('Password:')
+    re_i = getpass.getpass('Retype password:')
     if i != re_i:
         print("Sorry, passwords do not match.")
         return

@@ -1,5 +1,12 @@
 # Oh-My-Profiles
 
+# installation 安装
+
+```
+pip install OhMyProfiles
+```
+
+# Instructions 使用
 ```
 
    *******     ****     ****   *******
