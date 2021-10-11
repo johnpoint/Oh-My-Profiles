@@ -6,8 +6,10 @@ import json
 import uuid
 import zipfile
 import getpass
+from cryptography.fernet import Fernet
+from tqdm import trange
 
-VERSION = "0.15"
+VERSION = "0.18"
 
 
 def show_help():
@@ -32,20 +34,18 @@ def show_help():
 
 
 def importf(filename):
-    i = getpass.getpass('Password:')
-    h = hashlib.sha512()
-    h.update(i.encode())
-    Hash = h.hexdigest().encode()
-    buff = []
+    key = input('Key:')
+    try:
+        e = Fernet(key.encode())
+    except:
+        print("Fernet key must be 32 url-safe base64-encoded bytes.")
+        return
     with open(filename, "rb") as f:
-        fc = f.read()
-        flen = len(fc)
-        for i in range(flen):
-            c = i % len(Hash)
-            o = fc[i] ^ Hash[c]
-            buff.append(o)
+        ls=f.readlines()
+        print("Decrypting...")
         with open(filename.replace(".zip", "")+".out.zip", "wb") as fo:
-            fo.write(bytes(buff))
+            for i in trange(len(ls)):
+                fo.write(e.decrypt(ls[i]))
     try:
         with zipfile.ZipFile(filename.replace(".zip", "")+".out.zip", "r") as f:
             for names in f.namelist():
@@ -61,14 +61,8 @@ def importf(filename):
 
 
 def export_config():
-    i = getpass.getpass('Password:')
-    re_i = getpass.getpass('Retype password:')
-    if i != re_i:
-        print("Sorry, passwords do not match.")
-        return
-    h = hashlib.sha512()
-    h.update(i.encode())
-    Hash = h.hexdigest().encode()
+    key = Fernet.generate_key()
+    print("key:\n"+key.decode())
     with zipfile.ZipFile(os.getcwd()+"/.export.zip", 'w') as z:
         z.write(os.environ['HOME'] +
                 "/.config/oh-my-profiles/data.json", "data.json")
@@ -78,16 +72,13 @@ def export_config():
             fpath = fpath and fpath + os.sep or ''
             for filename in filenames:
                 z.write(os.path.join(dirpath, filename), fpath+filename)
-    buff = []
     with open(os.getcwd()+"/.export.zip", 'rb') as f:
-        fc = f.read()
-        flen = len(fc)
-        for i in range(flen):
-            c = i % len(Hash)
-            o = fc[i] ^ Hash[c]
-            buff.append(o)
+        ls = f.readlines()
+        e = Fernet(key)
+        print("Encrypting...")
         with open(os.getcwd()+"/export.zip", 'wb') as fo:
-            fo.write(bytes(buff))
+            for i in trange(len(ls)):
+                fo.write(e.encrypt(ls[i])+"\n".encode())
     os.remove(os.getcwd()+"/.export.zip")
 
 
